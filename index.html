@@ -21,7 +21,7 @@
             margin: 0;
             padding: 0;
             color: var(--text);
-            padding-bottom: 80px; /* מקום לכפתור צף */
+            padding-bottom: 80px;
         }
 
         /* ניווט עליון */
@@ -68,11 +68,10 @@
             padding: 15px;
             max-width: 600px;
             margin: 0 auto;
-            display: none; /* מוסתר כברירת מחדל */
+            display: none;
         }
         .container.active { display: block; }
 
-        /* פרטי מבצע */
         .user-details {
             background: white;
             padding: 15px;
@@ -100,7 +99,7 @@
             box-sizing: border-box;
         }
 
-        /* כרטיסיות עמדה */
+        /* כרטיסיות */
         .role-card {
             background: white;
             border-radius: 10px;
@@ -119,7 +118,6 @@
             align-items: center;
         }
 
-        /* צבעים לפי סוג נוהל */
         .morning-mode .role-card { border-top-color: var(--orange); }
         .evening-mode .role-card { border-top-color: var(--dark); }
 
@@ -131,20 +129,20 @@
 
         .task-item {
             border-bottom: 1px solid #eee;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .task-item:last-child { border-bottom: none; }
 
-        /* צ'ק בוקס מותאם אישית */
-        .task-label {
+        /* צ'ק בוקס רגיל */
+        .checkbox-wrapper {
             display: flex;
             align-items: center;
-            padding: 15px;
+            width: 100%;
             cursor: pointer;
-            user-select: none;
-            transition: background 0.2s;
         }
-
-        .task-label:active { background-color: #f0f0f0; }
 
         .custom-checkbox {
             width: 24px;
@@ -175,6 +173,16 @@
         input[type="checkbox"]:checked ~ .task-text {
             text-decoration: line-through;
             color: #999;
+        }
+
+        /* שדה מספר (למחסניות) */
+        .number-input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid var(--orange);
+            border-radius: 6px;
+            font-size: 1.1rem;
+            text-align: center;
         }
 
         /* כפתור פעולה צף */
@@ -239,12 +247,10 @@
                 <input type="text" id="name-morning" placeholder="הכנס שם מלא">
             </div>
         </div>
-
         <div id="morning-tasks"></div>
-        
         <div class="input-group" style="margin-top: 20px;">
             <label>הערות / חריגים לדיווח:</label>
-            <input type="text" id="notes-morning" placeholder="למשל: מחסנית חסרה בעמדה 2...">
+            <input type="text" id="notes-morning" placeholder="למשל: חסר ציוד בעמדה 1...">
         </div>
     </div>
 
@@ -259,9 +265,7 @@
                 <input type="text" id="name-evening" placeholder="הכנס שם מלא">
             </div>
         </div>
-
         <div id="evening-tasks"></div>
-
         <div class="input-group" style="margin-top: 20px;">
             <label>הערות / חריגים לדיווח:</label>
             <input type="text" id="notes-evening" placeholder="למשל: תקלה ברדיאטור...">
@@ -277,62 +281,97 @@
     </div>
 
     <script>
-        // נתונים (אותם נתונים מהקובץ המקורי)
+        // נתונים
         const data = {
             morning: [
                 {
-                    role: "מספר 1 (זירה + חיקוי)",
-                    tasks: ["הדלקת מערכות (פורמט הפעלה)", "חבירה לטלפון חיקוי", "הדלקת רדיאטורים", "דיווח מוכנות"]
+                    role: "מספר 1 (דירה + פנו)",
+                    items: [
+                        { type: "check", text: "הדלקת מערכות (פורמט הפעלה)" },
+                        { type: "check", text: "חבירה לטלפון חיקוי" },
+                        { type: "check", text: "הדלקת רדיאטורים" },
+                        { type: "check", text: "דיווח מוכנות" }
+                    ]
                 },
                 {
-                    role: "מספר 2 (מנתר)",
-                    tasks: ["הדלקת מערכות (פורמט הפעלה)", "חבירה לטלפון טיפול רפואי", "החתמת מ\"מ על ציוד אימון וטרקלין", "דיווח למספר 1 על מוכנות"]
+                    role: "מספר 2 (פנתר)",
+                    items: [
+                        { type: "check", text: "הדלקת מערכות (פורמט הפעלה)" },
+                        { type: "check", text: "חבירה לטלפון טיפול רפואי" },
+                        { type: "check", text: "החתמת מ\"מ על ציוד אימון" }, /* נמחק אזכור הטרקלין */
+                        { type: "check", text: "דיווח למספר 1 על מוכנות" }
+                    ]
                 },
                 {
                     role: "מספר 3 (נשקייה)",
-                    tasks: ["ספירת נשקים (בוקר)", "חבירה לחלוץ להוצאת נשקי EST", "החתמת המ\"מ על הנשקייה", "בדיקת תקינות נשקים", "החתמת טרקלין"]
+                    items: [
+                        { type: "check", text: "הגעה ב-08:00" }, /* הועבר ממדריכים */
+                        { type: "check", text: "הכנת המבואה לתדריך" }, /* הועבר ממדריכים */
+                        { type: "check", text: "ספירת נשקים (בוקר)" },
+                        { type: "check", text: "חבירה לחלוץ להוצאת נשקי EST" },
+                        { type: "check", text: "החתמת המ\"מ על הנשקייה" },
+                        { type: "check", text: "בדיקת תקינות נשקים" }
+                        /* נמחק סעיף החתמת טרקלין */
+                    ]
                 },
                 {
                     role: "מספר 4 (EST)",
-                    tasks: ["חבירה נשקי EST", "הקמת אולם EST", "הדלקת מערכות ע\"פ פורמט", "דיווח למספר 1 על מוכנות"]
-                },
-                {
-                    role: "מדריכי לוחמה",
-                    tasks: ["הגעה ב-08:00", "הכנת המבואה לתדריך"]
+                    items: [
+                        { type: "check", text: "חבירה נשקי EST" },
+                        { type: "check", text: "הקמת אולם EST" },
+                        { type: "check", text: "הדלקת מערכות ע\"פ פורמט" },
+                        { type: "check", text: "דיווח למספר 1 על מוכנות" }
+                    ]
                 }
+                /* נמחקה קבוצת מדריכי הלוחמה מהבוקר */
             ],
             evening: [
                 {
-                    role: "מספר 1 (זירה + חיקוי)",
-                    tasks: ["כיבוי מערכות לפי פורמט", "ספירת ארגז ציוד", "כיבוי רדיאטורים", "ספירת נשקים (ערב)", "שליחת פורמט סגירה בוואטסאפ"]
-                },
-                {
-                    role: "מספר 2 (מנתר)",
-                    tasks: ["הזנת ציוני ח\"ע", "כיבוי מערכות", "ספירת מחסניות", "חיזוק מחסניות", "גירוז מחסניות"]
-                },
-                {
-                    role: "מספר 3 (נשקייה)",
-                    tasks: ["חבירה לכוח לצ'ק אאוט", "אחסון נשקים", "ספירת נשקייה", "חיבור לייזרים לטעינה", "זיכוי טרקלין", "וידוא נעילת דלתות מתקן"]
-                },
-                {
-                    role: "מספר 4 (EST)",
-                    tasks: ["חבירה לכוח צ'ק אאוט EST", "כיבוי ופירוק אולם EST", "שאיבת הטווח", "הורדת נשקי EST לנשקייה", "פריקת מדחסים (ריקון נוזלים)"]
-                },
-                {
-                    role: "מדריכי לוחמה",
-                    tasks: ["עזרה למספר 3 בסגירת המתקן", "חבירה לכוח זיכויים", "ימי שני: שימון נשקי דבורק"]
+                    role: "רשימת סגירה אחודה",
+                    items: [
+                        { type: "check", text: "כיבוי מערכות זירה+חיקוי" },
+                        { type: "check", text: "ספירת ארגז ציוד" },
+                        { type: "check", text: "כיבוי רדיאטורים" },
+                        { type: "check", text: "ספירת נשקים (ערב)" },
+                        { type: "check", text: "שליחת פורמט סגירה בוואטסאפ" },
+                        
+                        { type: "check", text: "הזנת ציוני ח\"ע" },
+                        { type: "check", text: "כיבוי מערכות פנתר" },
+                        
+                        /* כאן שדה הזנת מספר המחסניות */
+                        { type: "number", text: "כמות מחסניות", id: "mag_count" },
+                        
+                        { type: "check", text: "חיזוק מחסניות" },
+                        { type: "check", text: "גירוז מחסניות" },
+
+                        { type: "check", text: "חבירה לכוח לצ'ק אאוט" },
+                        { type: "check", text: "אחסון נשקים" },
+                        { type: "check", text: "ספירת נשקייה" },
+                        { type: "check", text: "חיבור לייזרים לטעינה" },
+                        { type: "check", text: "וידוא נעילת דלתות מתקן" },
+                        /* נמחק סעיף זיכוי טרקלין */
+
+                        { type: "check", text: "חבירה לכוח צ'ק אאוט EST" },
+                        { type: "check", text: "כיבוי ופירוק אולם EST" },
+                        { type: "check", text: "שאיבת הטווח" },
+                        { type: "check", text: "הורדת נשקי EST לנשקייה" },
+                        { type: "check", text: "פריקת מדחסים (ריקון נוזלים)" },
+
+                        { type: "check", text: "עזרה למספר 3 בסגירת המתקן" },
+                        { type: "check", text: "חבירה לכוח זיכויים" },
+                        { type: "check", text: "בימי שני: שימון נשקי דבורק" }
+                    ]
                 }
             ]
         };
 
         let currentMode = 'morning';
 
-        // אתחול האפליקציה
         window.onload = function() {
             renderTasks('morning');
             renderTasks('evening');
             setTodayDate();
-            loadState(); // טעינת נתונים שמורים
+            loadState();
         };
 
         function setTodayDate() {
@@ -343,12 +382,8 @@
 
         function switchTab(mode) {
             currentMode = mode;
-            
-            // עדכון כפתורים
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelector(`.tab-${mode}`).classList.add('active');
-
-            // עדכון תצוגה
             document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
             document.getElementById(`${mode}-container`).classList.add('active');
         }
@@ -364,17 +399,26 @@
                     <ul class="task-list">
                 `;
                 
-                roleData.tasks.forEach((task, taskIndex) => {
-                    const id = `${mode}-${roleIndex}-${taskIndex}`;
-                    html += `
-                    <li class="task-item">
-                        <label class="task-label" for="${id}">
-                            <input type="checkbox" id="${id}" onchange="saveState()">
-                            <span class="custom-checkbox"></span>
-                            <span class="task-text">${task}</span>
-                        </label>
-                    </li>
-                    `;
+                roleData.items.forEach((item, itemIndex) => {
+                    const uniqueId = `${mode}-${roleIndex}-${itemIndex}`;
+                    
+                    html += `<li class="task-item">`;
+                    
+                    if (item.type === 'number') {
+                        html += `
+                            <span class="task-text" style="font-weight:bold">${item.text}:</span>
+                            <input type="number" id="${uniqueId}" class="number-input" placeholder="0" onchange="saveState()">
+                        `;
+                    } else {
+                        html += `
+                            <label class="checkbox-wrapper" for="${uniqueId}">
+                                <input type="checkbox" id="${uniqueId}" onchange="saveState()">
+                                <span class="custom-checkbox"></span>
+                                <span class="task-text">${item.text}</span>
+                            </label>
+                        `;
+                    }
+                    html += `</li>`;
                 });
 
                 html += `</ul></div>`;
@@ -383,16 +427,16 @@
             container.innerHTML = html;
         }
 
-        // שמירה ל-LocalStorage
         function saveState() {
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
             const state = {};
-            checkboxes.forEach(cb => {
-                state[cb.id] = cb.checked;
-            });
+            checkboxes.forEach(cb => state[cb.id] = cb.checked);
+            
+            const numbers = document.querySelectorAll('input[type="number"]');
+            numbers.forEach(num => state[num.id] = num.value);
+
             localStorage.setItem('checklistState', JSON.stringify(state));
             
-            // שמירת שמות והערות
             localStorage.setItem('name-morning', document.getElementById('name-morning').value);
             localStorage.setItem('name-evening', document.getElementById('name-evening').value);
             localStorage.setItem('notes-morning', document.getElementById('notes-morning').value);
@@ -402,12 +446,14 @@
         function loadState() {
             const saved = JSON.parse(localStorage.getItem('checklistState'));
             if (saved) {
-                for (const [id, checked] of Object.entries(saved)) {
+                for (const [id, value] of Object.entries(saved)) {
                     const el = document.getElementById(id);
-                    if (el) el.checked = checked;
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = value;
+                        if (el.type === 'number') el.value = value;
+                    }
                 }
             }
-            // טעינת טקסטים
             if(localStorage.getItem('name-morning')) document.getElementById('name-morning').value = localStorage.getItem('name-morning');
             if(localStorage.getItem('name-evening')) document.getElementById('name-evening').value = localStorage.getItem('name-evening');
             if(localStorage.getItem('notes-morning')) document.getElementById('notes-morning').value = localStorage.getItem('notes-morning');
@@ -415,48 +461,66 @@
         }
 
         function clearForm() {
-            if(confirm('האם אתה בטוח שברצונך לנקות את הטופס?')) {
+            if(confirm('לנקות את כל הטופס?')) {
                 localStorage.clear();
                 location.reload();
             }
         }
 
-        // יצירת הודעת וואטסאפ
         function sendWhatsapp() {
             const date = document.getElementById(`date-${currentMode}`).value;
             const name = document.getElementById(`name-${currentMode}`).value;
             const notes = document.getElementById(`notes-${currentMode}`).value;
             
             if (!name) {
-                alert('אנא מלא את שם המבצע לפני השליחה');
+                alert('חובה למלא את שם המבצע');
                 return;
             }
 
             let text = `*דו"ח ${currentMode === 'morning' ? 'פתיחה' : 'סגירה'} - סימולטור*\n`;
-            text += `📅 תאריך: ${date}\n`;
-            text += `👮 מבצע: ${name}\n`;
+            text += `📅 ${date}\n`;
+            text += `👮 ${name}\n`;
             text += `------------------\n`;
 
-            // איסוף חריגים (מה שלא סומן)
             let allChecked = true;
             let uncheckedItems = [];
+            let numberReport = [];
 
             data[currentMode].forEach((roleData, roleIndex) => {
-                roleData.tasks.forEach((task, taskIndex) => {
-                    const id = `${currentMode}-${roleIndex}-${taskIndex}`;
-                    const isChecked = document.getElementById(id).checked;
+                roleData.items.forEach((item, itemIndex) => {
+                    const id = `${currentMode}-${roleIndex}-${itemIndex}`;
+                    const el = document.getElementById(id);
                     
-                    if (!isChecked) {
-                        allChecked = false;
-                        uncheckedItems.push(`❌ ${roleData.role}: ${task}`);
+                    if (item.type === 'number') {
+                        const val = el.value;
+                        if (!val || val === '0') {
+                            allChecked = false;
+                            uncheckedItems.push(`❌ ${item.text}: לא מולא`);
+                        } else {
+                            numberReport.push(`📦 *${item.text}:* ${val}`);
+                        }
+                    } else {
+                        if (!el.checked) {
+                            allChecked = false;
+                            if (currentMode === 'evening') {
+                                uncheckedItems.push(`❌ ${item.text}`);
+                            } else {
+                                uncheckedItems.push(`❌ ${roleData.role}: ${item.text}`);
+                            }
+                        }
                     }
                 });
             });
 
+            if (numberReport.length > 0) {
+                text += numberReport.join('\n') + '\n';
+                text += `------------------\n`;
+            }
+
             if (allChecked) {
                 text += `✅ *כל הסעיפים בוצעו ותקינים*\n`;
             } else {
-                text += `⚠️ *סעיפים שלא בוצעו/סומנו:*\n`;
+                text += `⚠️ *חוסרים / לא בוצע:*\n`;
                 text += uncheckedItems.join('\n') + '\n';
             }
 
@@ -465,11 +529,7 @@
                 text += `📝 *הערות:* ${notes}\n`;
             }
             
-            text += `\nנשלח באמצעות האפליקציה`;
-
-            // בניית הקישור
-            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         }
     </script>
 </body>
