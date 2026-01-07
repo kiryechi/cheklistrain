@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>צ'ק ליסט מבצעי - סימולטור</title>
+    <style>
+        :root {
+            --orange: #E65100;
+            --orange-light: #FFE0B2;
+            --dark: #212121;
+            --dark-light: #424242;
+            --bg: #f5f5f5;
+            --text: #333;
+            --success: #4CAF50;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            padding-bottom: 80px; /* מקום לכפתור צף */
+        }
+
+        /* ניווט עליון */
+        .nav-tabs {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-morning {
+            background-color: #fff;
+            color: var(--orange);
+            border-bottom: 4px solid transparent;
+        }
+        .tab-morning.active {
+            background-color: var(--orange-light);
+            border-bottom: 4px solid var(--orange);
+        }
+
+        .tab-evening {
+            background-color: #fff;
+            color: var(--dark);
+            border-bottom: 4px solid transparent;
+        }
+        .tab-evening.active {
+            background-color: #e0e0e0;
+            border-bottom: 4px solid var(--dark);
+        }
+
+        /* תוכן */
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            display: none; /* מוסתר כברירת מחדל */
+        }
+        .container.active { display: block; }
+
+        /* פרטי מבצע */
+        .user-details {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* כרטיסיות עמדה */
+        .role-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-top: 5px solid #ccc;
+        }
+
+        .role-header {
+            padding: 12px 15px;
+            background: #f9f9f9;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* צבעים לפי סוג נוהל */
+        .morning-mode .role-card { border-top-color: var(--orange); }
+        .evening-mode .role-card { border-top-color: var(--dark); }
+
+        .task-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .task-item {
+            border-bottom: 1px solid #eee;
+        }
+        .task-item:last-child { border-bottom: none; }
+
+        /* צ'ק בוקס מותאם אישית */
+        .task-label {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .task-label:active { background-color: #f0f0f0; }
+
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"] { display: none; }
+
+        input[type="checkbox"]:checked + .custom-checkbox {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        input[type="checkbox"]:checked + .custom-checkbox::after {
+            content: '✓';
+            font-weight: bold;
+        }
+
+        input[type="checkbox"]:checked ~ .task-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        /* כפתור פעולה צף */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            flex: 1;
+            max-width: 300px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-clear {
+            background-color: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn tab-morning active" onclick="switchTab('morning')">☀️ נוהל בוקר</button>
+        <button class="tab-btn tab-evening" onclick="switchTab('evening')">🌙 נוהל ערב</button>
+    </nav>
+
+    <div id="morning-container" class="container morning-mode active">
+        <div class="user-details">
+            <div class="input-group">
+                <label>תאריך</label>
+                <input type="date" id="date-morning">
+            </div>
+            <div class="input-group">
+                <label>שם המבצע</label>
+                <input type="text" id="name-morning" placeholder="הכנס שם מלא">
+            </div>
+        </div>
+
+        <div id="morning-tasks"></div>
+        
+        <div class="input-group" style="margin-top: 20px;">
+            <label>הערות / חריגים לדיווח:</label>
+            <input type="text" id="notes-morning" placeholder="למשל: מחסנית חסרה בעמדה 2...">
+        </div>
+    </div>
+
+    <div id="evening-container" class="container evening-mode">
+        <div class="user-details">
+            <div class="input-group">
+                <label>תאריך</label>
+                <input type="date" id="date-evening">
+            </div>
+            <div class="input-group">
+                <label>שם המבצע</label>
+                <input type="text" id="name-evening" placeholder="הכנס שם מלא">
+            </div>
+        </div>
+
+        <div id="evening-tasks"></div>
+
+        <div class="input-group" style="margin-top: 20px;">
+            <label>הערות / חריגים לדיווח:</label>
+            <input type="text" id="notes-evening" placeholder="למשל: תקלה ברדיאטור...">
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn-clear" onclick="clearForm()" title="נקה הכל">🗑️</button>
+        <button class="btn-whatsapp" onclick="sendWhatsapp()">
+            <span>שלח דו"ח בוואטסאפ</span>
+            <span style="font-size: 1.2em">📱</span>
+        </button>
+    </div>
+
+    <script>
+        // נתונים (אותם נתונים מהקובץ המקורי)
+        const data = {
+            morning: [
+                {
+                    role: "מספר 1 (זירה + חיקוי)",
+                    tasks: ["הדלקת מערכות (פורמט הפעלה)", "חבירה לטלפון חיקוי", "הדלקת רדיאטורים", "דיווח מוכנות"]
+                },
+                {
+                    role: "מספר 2 (מנתר)",
+                    tasks: ["הדלקת מערכות (פורמט הפעלה)", "חבירה לטלפון טיפול רפואי", "החתמת מ\"מ על ציוד אימון וטרקלין", "דיווח למספר 1 על מוכנות"]
+                },
+                {
+                    role: "מספר 3 (נשקייה)",
+                    tasks: ["ספירת נשקים (בוקר)", "חבירה לחלוץ להוצאת נשקי EST", "החתמת המ\"מ על הנשקייה", "בדיקת תקינות נשקים", "החתמת טרקלין"]
+                },
+                {
+                    role: "מספר 4 (EST)",
+                    tasks: ["חבירה נשקי EST", "הקמת אולם EST", "הדלקת מערכות ע\"פ פורמט", "דיווח למספר 1 על מוכנות"]
+                },
+                {
+                    role: "מדריכי לוחמה",
+                    tasks: ["הגעה ב-08:00", "הכנת המבואה לתדריך"]
+                }
+            ],
+            evening: [
+                {
+                    role: "מספר 1 (זירה + חיקוי)",
+                    tasks: ["כיבוי מערכות לפי פורמט", "ספירת ארגז ציוד", "כיבוי רדיאטורים", "ספירת נשקים (ערב)", "שליחת פורמט סגירה בוואטסאפ"]
+                },
+                {
+                    role: "מספר 2 (מנתר)",
+                    tasks: ["הזנת ציוני ח\"ע", "כיבוי מערכות", "ספירת מחסניות", "חיזוק מחסניות", "גירוז מחסניות"]
+                },
+                {
+                    role: "מספר 3 (נשקייה)",
+                    tasks: ["חבירה לכוח לצ'ק אאוט", "אחסון נשקים", "ספירת נשקייה", "חיבור לייזרים לטעינה", "זיכוי טרקלין", "וידוא נעילת דלתות מתקן"]
+                },
+                {
+                    role: "מספר 4 (EST)",
+                    tasks: ["חבירה לכוח צ'ק אאוט EST", "כיבוי ופירוק אולם EST", "שאיבת הטווח", "הורדת נשקי EST לנשקייה", "פריקת מדחסים (ריקון נוזלים)"]
+                },
+                {
+                    role: "מדריכי לוחמה",
+                    tasks: ["עזרה למספר 3 בסגירת המתקן", "חבירה לכוח זיכויים", "ימי שני: שימון נשקי דבורק"]
+                }
+            ]
+        };
+
+        let currentMode = 'morning';
+
+        // אתחול האפליקציה
+        window.onload = function() {
+            renderTasks('morning');
+            renderTasks('evening');
+            setTodayDate();
+            loadState(); // טעינת נתונים שמורים
+        };
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-morning').value = today;
+            document.getElementById('date-evening').value = today;
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            
+            // עדכון כפתורים
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-${mode}`).classList.add('active');
+
+            // עדכון תצוגה
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${mode}-container`).classList.add('active');
+        }
+
+        function renderTasks(mode) {
+            const container = document.getElementById(`${mode}-tasks`);
+            let html = '';
+
+            data[mode].forEach((roleData, roleIndex) => {
+                html += `
+                <div class="role-card">
+                    <div class="role-header">${roleData.role}</div>
+                    <ul class="task-list">
+                `;
+                
+                roleData.tasks.forEach((task, taskIndex) => {
+                    const id = `${mode}-${roleIndex}-${taskIndex}`;
+                    html += `
+                    <li class="task-item">
+                        <label class="task-label" for="${id}">
+                            <input type="checkbox" id="${id}" onchange="saveState()">
+                            <span class="custom-checkbox"></span>
+                            <span class="task-text">${task}</span>
+                        </label>
+                    </li>
+                    `;
+                });
+
+                html += `</ul></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // שמירה ל-LocalStorage
+        function saveState() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const state = {};
+            checkboxes.forEach(cb => {
+                state[cb.id] = cb.checked;
+            });
+            localStorage.setItem('checklistState', JSON.stringify(state));
+            
+            // שמירת שמות והערות
+            localStorage.setItem('name-morning', document.getElementById('name-morning').value);
+            localStorage.setItem('name-evening', document.getElementById('name-evening').value);
+            localStorage.setItem('notes-morning', document.getElementById('notes-morning').value);
+            localStorage.setItem('notes-evening', document.getElementById('notes-evening').value);
+        }
+
+        function loadState() {
+            const saved = JSON.parse(localStorage.getItem('checklistState'));
+            if (saved) {
+                for (const [id, checked] of Object.entries(saved)) {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = checked;
+                }
+            }
+            // טעינת טקסטים
+            if(localStorage.getItem('name-morning')) document.getElementById('name-morning').value = localStorage.getItem('name-morning');
+            if(localStorage.getItem('name-evening')) document.getElementById('name-evening').value = localStorage.getItem('name-evening');
+            if(localStorage.getItem('notes-morning')) document.getElementById('notes-morning').value = localStorage.getItem('notes-morning');
+            if(localStorage.getItem('notes-evening')) document.getElementById('notes-evening').value = localStorage.getItem('notes-evening');
+        }
+
+        function clearForm() {
+            if(confirm('האם אתה בטוח שברצונך לנקות את הטופס?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // יצירת הודעת וואטסאפ
+        function sendWhatsapp() {
+            const date = document.getElementById(`date-${currentMode}`).value;
+            const name = document.getElementById(`name-${currentMode}`).value;
+            const notes = document.getElementById(`notes-${currentMode}`).value;
+            
+            if (!name) {
+                alert('אנא מלא את שם המבצע לפני השליחה');
+                return;
+            }
+
+            let text = `*דו"ח ${currentMode === 'morning' ? 'פתיחה' : 'סגירה'} - סימולטור*\n`;
+            text += `📅 תאריך: ${date}\n`;
+            text += `👮 מבצע: ${name}\n`;
+            text += `------------------\n`;
+
+            // איסוף חריגים (מה שלא סומן)
+            let allChecked = true;
+            let uncheckedItems = [];
+
+            data[currentMode].forEach((roleData, roleIndex) => {
+                roleData.tasks.forEach((task, taskIndex) => {
+                    const id = `${currentMode}-${roleIndex}-${taskIndex}`;
+                    const isChecked = document.getElementById(id).checked;
+                    
+                    if (!isChecked) {
+                        allChecked = false;
+                        uncheckedItems.push(`❌ ${roleData.role}: ${task}`);
+                    }
+                });
+            });
+
+            if (allChecked) {
+                text += `✅ *כל הסעיפים בוצעו ותקינים*\n`;
+            } else {
+                text += `⚠️ *סעיפים שלא בוצעו/סומנו:*\n`;
+                text += uncheckedItems.join('\n') + '\n';
+            }
+
+            if (notes) {
+                text += `------------------\n`;
+                text += `📝 *הערות:* ${notes}\n`;
+            }
+            
+            text += `\nנשלח באמצעות האפליקציה`;
+
+            // בניית הקישור
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
